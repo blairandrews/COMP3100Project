@@ -1,6 +1,9 @@
 import java.net.*;
+import java.util.*;
 import java.io.*;
 public class TCPClient {
+	String serverName;
+	int serverID, serverCores;
 	public static void main(String[] args){
 		Socket s = null;
 		try{
@@ -23,15 +26,26 @@ public class TCPClient {
 				data = in.readLine().toString();
 				System.out.println("Message = " + data);
 			
-				out.write(("GETS Type tiny\n").getBytes());
+				out.write(("GETS All\n").getBytes());
 				data = in.readLine().toString();
 				System.out.println("Message = " + data);
+
+				String split[] = data.split("\\s+");
+				int nRecs = Integer.parseInt(split[1]);
+				int recSize = Integer.parseInt(split[2]); //finding how many records are in the config
+
+				out.write(("OK\n").getBytes());
+
+				ArrayList<TCPClient> splits = new ArrayList<TCPClient>();
+				for(int i = 0; i < nRecs; i++){
+					TCPClient obj = new TCPClient();
+					split = in.readLine().toString().split("\\s+");
+					obj.serverName = split[0];
+					obj.serverID = Integer.parseInt(split[1]);
+					obj.serverCores = Integer.parseInt(split[4]);
+					splits.add(obj);
+				}
 				
-				String[] dataSplit = data.split(" ");
-				
-				out.write(("LSTJ tiny 0\n").getBytes());
-				data = in.readLine().toString();
-				System.out.println("Message = " + data);
 				break;
 			}
 		} catch(UnknownHostException e){

@@ -4,10 +4,11 @@ public class TCPClient {
 	public static void main(String[] args){
 		Socket s = null;
 		try{
-			int serverPort = 52000;
+			int serverPort = 50000;
 			s = new Socket("localhost", serverPort);
 			BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
 			DataOutputStream out = new DataOutputStream(s.getOutputStream());
+			
 			out.write(("HELO\n").getBytes());
 			String data = in.readLine().toString();
 			System.out.println("Message = " + data);
@@ -17,13 +18,22 @@ public class TCPClient {
 			data = in.readLine().toString();
 			System.out.println("Message = " + data);
 			
-			out.write(("REDY\n").getBytes());
-			data = in.readLine().toString();
-			System.out.println("Message = " + data);
+			while(data != "NONE"){
+				out.write(("REDY\n").getBytes());
+				data = in.readLine().toString();
+				System.out.println("Message = " + data);
 			
-			out.write(("QUIT\n").getBytes());
-			data = in.readLine().toString();
-			System.out.println("Message = " + data);
+				out.write(("GETS Type tiny\n").getBytes());
+				data = in.readLine().toString();
+				System.out.println("Message = " + data);
+				
+				String[] dataSplit = data.split(" ");
+				
+				out.write(("LSTJ tiny 0\n").getBytes());
+				data = in.readLine().toString();
+				System.out.println("Message = " + data);
+				break;
+			}
 		} catch(UnknownHostException e){
 			System.out.println("Socket: " + e.getMessage());
 		} catch(EOFException e) {

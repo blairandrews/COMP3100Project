@@ -28,7 +28,8 @@ public class TCPClient {
 				data = in.readLine().toString();
 				System.out.println("Message = " + data);
 
-				if(data.equals("NONE")) break;
+				if (data.equals("NONE"))
+					break;
 
 				String splitted[] = data.split("\\s+");
 				String cmdCode = splitted[0];
@@ -36,13 +37,15 @@ public class TCPClient {
 				int numCores = 0;
 				int memory = 0;
 				int disk = 0;
-				if(cmdCode.equals("JCPL")){
+
+				if (cmdCode.equals("JCPL")) {
 					out.write(("OK\n").getBytes());
 					data = in.readLine().toString();
 					data = in.readLine().toString();
 					continue;
 				}
-				if(cmdCode.equals("JOBN")){
+
+				if (cmdCode.equals("JOBN")) {
 					jobID = Integer.parseInt(splitted[2]);
 					numCores = Integer.parseInt(splitted[4]);
 					memory = Integer.parseInt(splitted[5]);
@@ -54,10 +57,10 @@ public class TCPClient {
 				System.out.println("Message = " + data);
 
 				String split[] = data.split("\\s+");
-				int nRecs = Integer.parseInt(split[1]);
-				int recSize = Integer.parseInt(split[2]); // finding how many records are in the config
+				int nRecs = Integer.parseInt(split[1]); // finding how many servers there are that are capable
 
 				out.write(("OK\n").getBytes());
+
 				boolean serverFound = false;
 				String largestServer = "";
 				ArrayList<TCPClient> splits = new ArrayList<TCPClient>();
@@ -85,26 +88,33 @@ public class TCPClient {
 						}
 					}
 
-					for(int i = 0; i < splits.size(); i++){
-						if(splits.get(i).serverName.equals(largestServer)){
+					for (int i = 0; i < splits.size(); i++) {
+						if (splits.get(i).serverName.equals(largestServer)) {
 							splitty.add(splits.get(i));
 						}
 					}
+
 					serverFound = true;
 				}
+
 				out.write(("OK\n").getBytes());
 				data = in.readLine().toString();
 				System.out.println("Message = " + data);
+
 				int largestServerCount = splitty.size();
 
-				if(cmdCode.equals("JOBN")){
-					out.write(("SCHD "+ jobID + " " + largestServer + " " + count + "\n").getBytes());
+				if (cmdCode.equals("JOBN")) {
+					out.write(("SCHD " + jobID + " " + largestServer + " " + count + "\n").getBytes());
 					count++;
-					if(count == largestServerCount) count = 0;
+
+					if (count == largestServerCount)
+						count = 0;
+
 					data = in.readLine().toString();
 					System.out.println("Message = " + data);
 				}
 			}
+
 			out.write(("QUIT\n").getBytes());
 			data = in.readLine().toString();
 			System.out.println("Message = " + data);

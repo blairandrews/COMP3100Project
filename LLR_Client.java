@@ -1,3 +1,8 @@
+/*
+ * Student ID: 46977880
+ * Name: Blair Andrews
+ */
+
 import java.net.*;
 import java.util.*;
 import java.io.*;
@@ -6,14 +11,15 @@ public class LLR_Client {
 	String serverName;
 	int serverID, serverCores;
 
-	public static int getMaxCoreCount(ArrayList<LLR_Client> list) {
-		int max = Integer.MIN_VALUE;
-		for (int i = 0; i < list.size(); i++) {
-			if (list.get(i).serverCores > max) {
-				max = list.get(i).serverCores;
+	public static int getMaxCoreCount(ArrayList<LLR_Client> serverList) {
+		int maxCores = Integer.MIN_VALUE;
+		
+		for (int i = 0; i < serverList.size(); i++) {
+			if (serverList.get(i).serverCores > maxCores) {
+				maxCores = serverList.get(i).serverCores;
 			}
 		}
-		return max;
+		return maxCores;
 	}
 
 	public static void main(String[] args) {

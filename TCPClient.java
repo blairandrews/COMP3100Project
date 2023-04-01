@@ -6,6 +6,15 @@ public class TCPClient {
 	String serverName;
 	int serverID, serverCores;
 
+	public static int getMax(ArrayList<TCPClient> list){
+		int max = Integer.MIN_VALUE;
+		for(int i = 0; i < list.size(); i++){
+			if(list.get(i).serverCores > max){
+				max = list.get(i).serverCores;
+			}
+		}
+		return max;
+	}
 	public static void main(String[] args) {
 		Socket s = null;
 		try {
@@ -23,6 +32,16 @@ public class TCPClient {
 			data = in.readLine().toString();
 			System.out.println("Message = " + data);
 			int count = 0;
+			boolean serverFound = false;
+			String largestServer = "";
+			int largestCoreCount = 0;
+			ArrayList<TCPClient> splits = new ArrayList<TCPClient>();
+			ArrayList<TCPClient> splitty = new ArrayList<TCPClient>();
+			int jobID = 0;
+			int numCores = 0;
+			int memory = 0;
+			int disk = 0;
+			int nRecs = 0;
 			while (true) {
 				out.write(("REDY\n").getBytes());
 				data = in.readLine().toString();
@@ -33,40 +52,36 @@ public class TCPClient {
 
 				String splitted[] = data.split("\\s+");
 				String cmdCode = splitted[0];
-				int jobID = 0;
-				int numCores = 0;
-				int memory = 0;
-				int disk = 0;
-
-				if (cmdCode.equals("JCPL")) {
-					out.write(("OK\n").getBytes());
-					data = in.readLine().toString();
-					data = in.readLine().toString();
-					continue;
-				}
 
 				if (cmdCode.equals("JOBN")) {
 					jobID = Integer.parseInt(splitted[2]);
 					numCores = Integer.parseInt(splitted[4]);
 					memory = Integer.parseInt(splitted[5]);
 					disk = Integer.parseInt(splitted[6]);
+				} else {
+					
+					continue;
 				}
 
-				out.write(("GETS Capable " + numCores + " " + memory + " " + disk + "\n").getBytes());
-				data = in.readLine().toString();
-				System.out.println("Message = " + data);
 
-				String split[] = data.split("\\s+");
-				int nRecs = Integer.parseInt(split[1]); // finding how many servers there are that are capable
 
-				out.write(("OK\n").getBytes());
-
-				boolean serverFound = false;
-				String largestServer = "";
-				ArrayList<TCPClient> splits = new ArrayList<TCPClient>();
-				ArrayList<TCPClient> splitty = new ArrayList<TCPClient>();
+				
+				
+				
 
 				if (serverFound == false) {
+					out.write(("GETS Capable " + numCores + " " + memory + " " + disk + "\n").getBytes());
+					data = in.readLine().toString();
+					System.out.println("Message = " + data);
+
+					String split[] = data.split("\\s+");
+
+					nRecs = Integer.parseInt(split[1]); // finding how many servers there are that are capable
+
+					out.write(("OK\n").getBytes());
+
+					
+
 					for (int i = 0; i < nRecs; i++) {
 						TCPClient obj = new TCPClient();
 						split = in.readLine().toString().split("\\s+");
@@ -77,15 +92,25 @@ public class TCPClient {
 					}
 
 					for (int i = 0; i < splits.size(); i++) {
-						if (i + 1 == splits.size()) {
+						if(splits.size() == 1){
+							largestServer = splits.get(i).serverName;
 							break;
 						}
-						if (splits.get(i).serverCores > splits.get(i + 1).serverCores) {
+						largestCoreCount = getMax(splits);
+						if(splits.get(i).serverCores == largestCoreCount){
 							largestServer = splits.get(i).serverName;
+							break;
 						}
-						if (splits.get(i).serverCores <= splits.get(i + 1).serverCores) {
-							largestServer = splits.get(i + 1).serverName;
-						}
+						// if(splits.get(i).serverCores == 16) {
+						// 	largestServer = splits.get(i).serverName;
+						// 	break;
+						// }
+						// if (splits.get(i).serverCores >= splits.get(i + 1).serverCores) {
+						// 	largestServer = splits.get(i).serverName;
+						// }
+						// if (splits.get(i).serverCores < splits.get(i + 1).serverCores) {
+						// 	largestServer = splits.get(i + 1).serverName;
+						// }
 					}
 
 					for (int i = 0; i < splits.size(); i++) {
@@ -94,24 +119,25 @@ public class TCPClient {
 						}
 					}
 
-					serverFound = true;
+					out.write(("OK\n").getBytes());
+					data = in.readLine().toString();
+					System.out.println("Message = " + data);
+
+					if(!largestServer.isEmpty())serverFound = true;
 				}
 
-				out.write(("OK\n").getBytes());
-				data = in.readLine().toString();
-				System.out.println("Message = " + data);
+				
 
 				int largestServerCount = splitty.size();
 
 				if (cmdCode.equals("JOBN")) {
+					if (count >= largestServerCount) count = 0;
 					out.write(("SCHD " + jobID + " " + largestServer + " " + count + "\n").getBytes());
-					count++;
-
-					if (count == largestServerCount)
-						count = 0;
-
 					data = in.readLine().toString();
 					System.out.println("Message = " + data);
+					count++;
+
+					
 				}
 			}
 
@@ -134,4 +160,5 @@ public class TCPClient {
 				}
 		}
 	}
+
 }

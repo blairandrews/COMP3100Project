@@ -9,7 +9,7 @@ import java.io.*;
 
 public class LRR_Client2 {
 	String serverName;
-	int serverID, serverCores; //initialising LRR_Client object variables
+	int serverID, serverCores, waitingJobs, runningJobs; //initialising LRR_Client object variables
 
 	public static int getMaxCoreCount(ArrayList<LRR_Client2> serverList) { 
 		int maxCores = Integer.MIN_VALUE; //constant min. integer value (so its not zero)
@@ -20,6 +20,18 @@ public class LRR_Client2 {
 			}
 		}
 		return maxCores;
+	}
+
+	public static LRR_Client2 getMinJobs(ArrayList<LRR_Client2> serverList) { 
+		LRR_Client2 serverLeastJobs = serverList.get(0);
+
+		for (int i = 0; i < serverList.size(); i++) {
+			if(serverList.get(i).waitingJobs == 0 && serverList.get(i).runningJobs == 0){
+				serverLeastJobs = serverList.get(i);
+				break;
+			}
+		}
+		return serverLeastJobs;
 	}
 
 	public static void main(String[] args) {
@@ -41,8 +53,6 @@ public class LRR_Client2 {
 			data = in.readLine().toString();
 			System.out.println("Message = " + data);
 
-			boolean serverFound = false;
-
 			String largestServer = "";
 
 			ArrayList<LRR_Client2> servers = new ArrayList<LRR_Client2>();
@@ -50,16 +60,17 @@ public class LRR_Client2 {
 
 			//variable initialisations outside of while loop so they don't break
 			int serverID = 0;
-			int largestCoreCount = 0;
 			int jobID = 0;
 			int numCores = 0;
 			int memory = 0;
 			int disk = 0;
 			int nRecs = 0;
+			int bestFit = 0;
+
 
 			while (true) {
-				servers.clear();
-				largestServers.clear();
+				servers = new ArrayList<LRR_Client2>();
+				largestServers = new ArrayList<LRR_Client2>();
 				out.write(("REDY\n").getBytes());
 				data = in.readLine().toString();
 				System.out.println("Message = " + data);
@@ -97,19 +108,20 @@ public class LRR_Client2 {
 						Server.serverName = split[0];
 						Server.serverID = Integer.parseInt(split[1]);
 						Server.serverCores = Integer.parseInt(split[4]);
+						Server.waitingJobs = Integer.parseInt(split[7]);
+						Server.runningJobs = Integer.parseInt(split[8]);
 						servers.add(Server); //adding the server to an ArrayList of servers for future use
 					}
-
-						if (servers.size() == 1) { //checking if the list of servers is 1, then first result will be largest server
-							largestServer = servers.get(0).serverName;
+					LRR_Client2 serv = getMinJobs(servers);
+					if(serv == null){
+						bestFit = getMaxCoreCount(servers);
+						for(int i = 0; i < servers.size(); i++){
+							if(servers.get(i).serverCores == bestFit){
+								serv = servers.get(i);
+							}
 						}
-						//using predefined method to find the largest possible core count in any of the servers
-						//largestCoreCount = getMaxCoreCount(servers); 
-
-						//checking the first server that is equal to the largest core count, for efficiency purposes
-						//we do not use the the last server out of the largest servers, we use the first
-						
-						largestServer = servers.get(0).serverName;
+					} 
+					largestServer = serv.serverName;
 						
 						
 					

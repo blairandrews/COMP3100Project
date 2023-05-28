@@ -8,10 +8,10 @@ import java.util.*;
 import java.io.*;
 
 public class LRR_Client2 {
-	String serverName;
+	String serverName, status;
 	int serverID, serverCores, waitingJobs, runningJobs; //initialising LRR_Client object variables
 
-	public static int getMaxCoreCount(ArrayList<LRR_Client2> serverList) { 
+	public static int getMaxCoreCount(ArrayList<LRR_Client2> serverList, int capCores) { 
 		int maxCores = Integer.MIN_VALUE; //constant min. integer value (so its not zero)
 		
 		for (int i = 0; i < serverList.size(); i++) {
@@ -22,11 +22,17 @@ public class LRR_Client2 {
 		return maxCores;
 	}
 
-	public static LRR_Client2 getMinJobs(ArrayList<LRR_Client2> serverList) { 
-		LRR_Client2 serverLeastJobs = serverList.get(0);
+	public static LRR_Client2 getMinJobs(ArrayList<LRR_Client2> serverList, int reqCores) { 
+		LRR_Client2 serverLeastJobs = null;
 
 		for (int i = 0; i < serverList.size(); i++) {
-			if(serverList.get(i).waitingJobs == 0 && serverList.get(i).runningJobs == 0){
+			if((serverList.get(i).waitingJobs == 0 && serverList.get(i).runningJobs == 0) && serverList.get(i).serverCores >= reqCores){
+				serverLeastJobs = serverList.get(i);
+				break;
+			}
+		}
+		for (int i = 0; i < serverList.size(); i++) {
+			if((serverList.get(i).waitingJobs == 0 || serverList.get(i).runningJobs == 0) && serverList.get(i).serverCores >= reqCores){
 				serverLeastJobs = serverList.get(i);
 				break;
 			}
@@ -53,6 +59,8 @@ public class LRR_Client2 {
 			data = in.readLine().toString();
 			System.out.println("Message = " + data);
 
+			Boolean serverFound = false;
+
 			String largestServer = "";
 
 			ArrayList<LRR_Client2> servers = new ArrayList<LRR_Client2>();
@@ -66,6 +74,7 @@ public class LRR_Client2 {
 			int disk = 0;
 			int nRecs = 0;
 			int bestFit = 0;
+			int largestServerID = 0;
 
 
 			while (true) {
@@ -90,7 +99,7 @@ public class LRR_Client2 {
 					continue; //if the command is anything else, restart the loop as we don't necessarily need to handle it
 				}
 				
-				//if (serverFound == false) {
+				if (serverFound == false) {
 					//get a list of the servers capable of running the jobs with the given information
 					out.write(("GETS Capable " + numCores + " " + memory + " " + disk + "\n").getBytes());
 					data = in.readLine().toString();
@@ -110,19 +119,33 @@ public class LRR_Client2 {
 						Server.serverCores = Integer.parseInt(split[4]);
 						Server.waitingJobs = Integer.parseInt(split[7]);
 						Server.runningJobs = Integer.parseInt(split[8]);
+						Server.status = split[2];
 						servers.add(Server); //adding the server to an ArrayList of servers for future use
 					}
-					LRR_Client2 serv = getMinJobs(servers);
+					LRR_Client2 serv = getMinJobs(servers, numCores);
 					if(serv == null){
-						bestFit = getMaxCoreCount(servers);
+						bestFit = getMaxCoreCount(servers, numCores);
 						for(int i = 0; i < servers.size(); i++){
-							if(servers.get(i).serverCores == bestFit){
+							if(servers.get(i).serverCores >= numCores){
 								serv = servers.get(i);
+								break;
 							}
+						}
+						
+						if(serv == null){
+							for(int i = 0; i < servers.size(); i++){
+								if(servers.get(i).status == "active" || servers.get(i).status == "booting"){
+									serv = servers.get(i);
+								}
+							}
+							
+						}
+						if(serv == null){
+							serv = servers.get(0);
 						}
 					} 
 					largestServer = serv.serverName;
-						
+					largestServerID = serv.serverID;
 						
 					
 
@@ -139,19 +162,17 @@ public class LRR_Client2 {
 					//making it so the largest server finding loop doesn't run again if its found the largest server
 					// if (!largestServer.isEmpty()) 
 					// 	serverFound = true;
-				//}
+					serverFound = true;
+				}
 
 				int largestServerCount = largestServers.size(); 
 
 				if (cmdCode.equals("JOBN")) { //if the command code is equal to JOBN, then we can schedule
-					if (serverID >= largestServerCount) //we check for the size of largest servers to make sure we dont index an out of bounds serverID
-						serverID = 0;
-					out.write(("SCHD " + jobID + " " + largestServer + " " + serverID + "\n").getBytes()); //send job schedule
+					out.write(("SCHD " + jobID + " " + largestServer + " " + largestServerID + "\n").getBytes()); //send job schedule
 					
 					data = in.readLine().toString();
 					System.out.println("Message = " + data);
-					serverID++;
-
+					serverFound = false;
 				}
 				
 			}

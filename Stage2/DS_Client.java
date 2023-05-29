@@ -7,12 +7,12 @@ import java.net.*;
 import java.util.*;
 import java.io.*;
 
-public class LRR_Client2 {
+public class DS_Client {
 	String serverName, status;
 	int serverID, serverCores, waitingJobs, runningJobs; // initialising LRR_Client object variables
 
-	public static LRR_Client2 getMinJobs(ArrayList<LRR_Client2> serverList, int reqCores) {
-		LRR_Client2 serverLeastJobs = null;
+	public static DS_Client getMinJobs(ArrayList<DS_Client> serverList, int reqCores) {
+		DS_Client serverLeastJobs = null;
 
 		for (int i = 0; i < serverList.size(); i++) {
 			if ((serverList.get(i).waitingJobs == 0 && serverList.get(i).runningJobs == 0)
@@ -55,7 +55,7 @@ public class LRR_Client2 {
 
 			String bestServer = "";
 
-			ArrayList<LRR_Client2> servers = new ArrayList<LRR_Client2>();
+			ArrayList<DS_Client> servers = new ArrayList<DS_Client>();
 
 			// variable initialisations outside of while loop so they don't break
 			int jobID = 0;
@@ -66,7 +66,7 @@ public class LRR_Client2 {
 			int bestServerID = 0;
 
 			while (true) {
-				servers = new ArrayList<LRR_Client2>();
+				servers = new ArrayList<DS_Client>();
 				out.write(("REDY\n").getBytes());
 				data = in.readLine().toString();
 				System.out.println("Message = " + data);
@@ -103,7 +103,7 @@ public class LRR_Client2 {
 					out.write(("OK\n").getBytes());
 
 					for (int i = 0; i < nRecs; i++) {
-						LRR_Client2 Server = new LRR_Client2(); // initialising new Server object to hold each server
+						DS_Client Server = new DS_Client(); // initialising new Server object to hold each server
 																// info
 						split = in.readLine().toString().split("\\s+");
 						Server.serverName = split[0];
@@ -114,7 +114,7 @@ public class LRR_Client2 {
 						Server.status = split[2];
 						servers.add(Server); // adding the server to an ArrayList of servers for future use
 					}
-					LRR_Client2 serv = getMinJobs(servers, numCores); // finding if no jobs are running/waiting at same
+					DS_Client serv = getMinJobs(servers, numCores); // finding if no jobs are running/waiting at same
 																		// time, along with if server is capable and
 																		// using that
 					if (serv == null) {
